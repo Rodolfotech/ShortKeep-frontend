@@ -10,18 +10,25 @@ export default function ChannelDetail() {
   const [channel, setChannel] = useState(null)
   const [shorts, setShorts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [syncing, setSyncing] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [toast, setToast] = useState(null)
 
   useEffect(() => {
     loadChannel()
   }, [id])
+
+  const showToast = (message) => {
+    setToast(message)
+    setTimeout(() => setToast(null), 4000)
+  }
 
   const loadChannel = async () => {
     try {
       setLoading(true)
       const { data } = await channelsApi.get(id)
       setChannel(data.channel || data)
-      const items = data.shorts || data.videos || []
+      const items = data.shorts || []
       setShorts(Array.isArray(items) ? items : [])
     } catch (err) {
       console.error(err)
@@ -32,10 +39,15 @@ export default function ChannelDetail() {
 
   const syncShorts = async () => {
     try {
-      await channelsApi.sync(id)
+      setSyncing(true)
+      const res = await channelsApi.sync(id)
+      const syncedCount = res.data?.synced || 0
+      showToast(`🔄 ${syncedCount} shorts sincronizados`)
       loadChannel()
     } catch (err) {
-      console.error(err)
+      showToast('Error al sincronizar')
+    } finally {
+      setSyncing(false)
     }
   }
 
@@ -44,6 +56,7 @@ export default function ChannelDetail() {
     if (!saved.find((s) => s.id === short.id)) {
       saved.push(short)
       localStorage.setItem(STORAGE_KEY, JSON.stringify(saved))
+      showToast('💾 Short guardado')
     }
   }
 
@@ -51,6 +64,7 @@ export default function ChannelDetail() {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
     const filtered = saved.filter((s) => s.id !== id)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered))
+    showToast('Short eliminado de guardados')
   }
 
   const isSaved = (id) => {
@@ -83,23 +97,26 @@ export default function ChannelDetail() {
 
   return (
     <div className="page">
+      {toast && <div className="toast">{toast}</div>}
+
       <div className="page-header">
         <Link to="/channels" className="back-link">← Volver</Link>
         <div className="channel-info-header">
-          <img src={channel.thumbnail || channel.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(channel.name || channel.title)}&background=random`} alt={channel.name || channel.title} className="channel-header-thumb" />
+          <img src={channel.thumbnail || `https://ui-avatars.com/api/?name=${encodeURIComponent(channel.name)}&background=random`} alt={channel.name} className="channel-header-thumb" />
           <div>
-            <h1>{channel.name || channel.title}</h1>
-            {channel.description && <p className="channel-desc">{channel.description}</p>}
+            <h1>{channel.name}</h1>
           </div>
         </div>
-        <button onClick={syncShorts} className="btn-secondary">🔄 Sincronizar shorts</button>
+        <button onClick={syncShorts} className="btn-secondary" disabled={syncing}>
+          {syncing ? '⏳ Sincronizando...' : '🔄 Sincronizar shorts'}
+        </button>
       </div>
 
       {shorts.length === 0 ? (
         <div className="empty-state">
           <span className="empty-icon">📹</span>
           <h2>No hay shorts sincronizados</h2>
-          <p>Sincroniza este canal para ver sus shorts</p>
+          <p>Haz clic en "Sincronizar shorts" para obtener los últimos videos</p>
         </div>
       ) : (
         <div className="shorts-container">
