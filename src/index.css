@@ -305,8 +305,13 @@ input {
   transition: background 0.15s;
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   background: var(--accent-hover);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 .btn-secondary {
@@ -466,8 +471,17 @@ input {
   transition: background 0.15s;
 }
 
-.btn-small:hover {
+.btn-small:hover:not(:disabled) {
   background: #333;
+}
+
+.btn-small:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn-small.syncing {
+  background: rgba(62, 166, 255, 0.15);
 }
 
 /* Modal */
@@ -733,6 +747,40 @@ input {
   height: 80px;
   border-radius: 50%;
   object-fit: cover;
+}
+
+/* Toast */
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 14px;
+  z-index: 200;
+  animation: toastIn 0.3s ease;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.toast-error {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 /* Responsive */

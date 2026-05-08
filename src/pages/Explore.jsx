@@ -18,8 +18,7 @@ export default function Explore() {
     try {
       setLoading(true)
       const { data } = await channels.latestShorts()
-      const items = data.shorts || data || []
-      setShorts(Array.isArray(items) ? items : [])
+      setShorts(Array.isArray(data) ? data : [])
     } catch (err) {
       setError('Error al cargar shorts')
     } finally {
